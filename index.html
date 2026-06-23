@@ -11,7 +11,7 @@
       <header class="topbar">
         <div>
           <h1>论文概要库</h1>
-          <p>把论文文件、阅读概要、分类主题和复盘笔记放在一起</p>
+          <p>按组会汇报的方式管理论文精读报告</p>
         </div>
         <div class="top-actions">
           <button id="newPaperBtn" class="primary-btn" type="button" title="新增论文">+ 新增</button>
@@ -59,7 +59,7 @@
         <section class="detail-panel" aria-live="polite">
           <div id="emptyState" class="empty-state">
             <h2>选择一篇论文开始查看</h2>
-            <p>新增 PDF 后点“扫描文件夹”，网站会自动创建待填写条目；分类可用逗号分隔，一篇文章可以属于多个主题。</p>
+            <p>以后我会按你的精读 prompt 自动提取论文内容，并更新到这里。</p>
           </div>
 
           <article id="detailView" class="paper-detail hidden">
@@ -78,35 +78,23 @@
             <div id="detailCategories" class="category-row"></div>
             <div id="detailTags" class="tag-row"></div>
 
-            <div class="tabs" role="tablist" aria-label="详情视图">
-              <button class="tab-btn active" data-tab="summary" type="button">概要</button>
-              <button class="tab-btn" data-tab="method" type="button">方法</button>
-              <button class="tab-btn" data-tab="notes" type="button">笔记</button>
-            </div>
+            <section class="brief-grid" aria-label="快速概要">
+              <div>
+                <span>一句话总结</span>
+                <p id="detailPlainSummary"></p>
+              </div>
+              <div>
+                <span>核心经济学问题</span>
+                <p id="detailQuestion"></p>
+              </div>
+              <div>
+                <span>数据与识别</span>
+                <p id="detailDataMethod"></p>
+              </div>
+            </section>
 
-            <div class="tab-panel active" data-panel="summary">
-              <dl class="field-grid">
-                <div><dt>研究问题</dt><dd id="detailQuestion"></dd></div>
-                <div><dt>核心结论</dt><dd id="detailFindings"></dd></div>
-                <div><dt>与你研究的关系</dt><dd id="detailRelevance"></dd></div>
-              </dl>
-            </div>
-
-            <div class="tab-panel" data-panel="method">
-              <dl class="field-grid">
-                <div><dt>数据</dt><dd id="detailData"></dd></div>
-                <div><dt>方法/识别</dt><dd id="detailMethod"></dd></div>
-                <div><dt>局限</dt><dd id="detailLimits"></dd></div>
-              </dl>
-            </div>
-
-            <div class="tab-panel" data-panel="notes">
-              <dl class="field-grid">
-                <div><dt>引用信息</dt><dd id="detailCitation"></dd></div>
-                <div><dt>详细笔记</dt><dd id="detailNotes"></dd></div>
-                <div><dt>文件位置</dt><dd id="detailFile"></dd></div>
-              </dl>
-            </div>
+            <nav id="reportNav" class="report-nav" aria-label="阅读报告章节"></nav>
+            <div id="reportSections" class="report-sections"></div>
           </article>
 
           <form id="paperForm" class="paper-form hidden">
@@ -123,7 +111,7 @@
 
             <div class="form-grid">
               <label>标题<input name="title" required></label>
-              <label>作者<input name="authors" placeholder="多个作者用逗号分隔"></label>
+              <label>作者和机构<input name="authors" placeholder="作者；机构"></label>
               <label>年份<input name="year" type="number" min="1800" max="2100"></label>
               <label>期刊/会议/来源<input name="venue" placeholder="未发表可写 Working paper"></label>
               <label>阅读状态
@@ -149,8 +137,21 @@
               <label>文件名<input name="fileName" placeholder="paper.pdf"></label>
               <label>文件夹路径<input name="filePath" placeholder="论文文件夹/paper.pdf"></label>
               <label class="wide">网页链接/DOI<input name="link" placeholder="https://... 或 DOI"></label>
-              <label class="wide">研究问题<textarea name="question"></textarea></label>
-              <label class="wide">核心结论<textarea name="findings"></textarea></label>
+
+              <label class="wide">1. 论文基本信息<textarea name="basicInfo"></textarea></label>
+              <label class="wide">2. 一句话总结<textarea name="plainSummary"></textarea></label>
+              <label class="wide">3. 研究背景<textarea name="background"></textarea></label>
+              <label class="wide">4. 核心问题<textarea name="question"></textarea></label>
+              <label class="wide">5. 方法整体框架<textarea name="framework"></textarea></label>
+              <label class="wide">6. 关键模块逐个讲解<textarea name="modules"></textarea></label>
+              <label class="wide">7. 重要概念解释<textarea name="concepts"></textarea></label>
+              <label class="wide">8. 实验部分解读<textarea name="experiments"></textarea></label>
+              <label class="wide">9. 论文创新点<textarea name="innovations"></textarea></label>
+              <label>10. 论文优点<textarea name="strengths"></textarea></label>
+              <label>11. 论文不足<textarea name="weaknesses"></textarea></label>
+              <label class="wide">12. 初学者最应该理解的内容<textarea name="beginnerGuide"></textarea></label>
+              <label class="wide">13. 最后总结<textarea name="finalSummary"></textarea></label>
+
               <label>数据<textarea name="data"></textarea></label>
               <label>方法/识别<textarea name="method"></textarea></label>
               <label>局限<textarea name="limits"></textarea></label>

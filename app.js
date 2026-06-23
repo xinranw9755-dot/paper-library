@@ -8,6 +8,22 @@ const statusLabels = {
   revisit: "待复盘"
 };
 
+const reportSections = [
+  { key: "basicInfo", title: "1. 论文基本信息", group: "概览" },
+  { key: "plainSummary", title: "2. 一句话总结", group: "概览" },
+  { key: "background", title: "3. 研究背景", group: "背景" },
+  { key: "question", title: "4. 核心问题", group: "背景" },
+  { key: "framework", title: "5. 方法整体框架", group: "方法" },
+  { key: "modules", title: "6. 关键模块逐个讲解", group: "方法" },
+  { key: "concepts", title: "7. 重要概念解释", group: "方法" },
+  { key: "experiments", title: "8. 实验部分解读", group: "结果" },
+  { key: "innovations", title: "9. 论文创新点", group: "结果" },
+  { key: "strengths", title: "10. 论文优点", group: "评价" },
+  { key: "weaknesses", title: "11. 论文不足", group: "评价" },
+  { key: "beginnerGuide", title: "12. 初学者最应该理解的内容", group: "学习" },
+  { key: "finalSummary", title: "13. 最后总结", group: "学习" }
+];
+
 const starterPapers = [
   {
     id: "fang-2025-decoding-chinas-industrial-policies",
@@ -22,8 +38,19 @@ const starterPapers = [
     fileName: "Fang et al. - 2025 - Decoding China's industrial policies.pdf",
     filePath: "Fang et al. - 2025 - Decoding China's industrial policies.pdf",
     link: "",
-    question: "这篇论文关注中国工业政策如何被识别、分类和理解。",
-    findings: "这里可以补充论文的主要结论、机制和你认为最值得引用的发现。",
+    basicInfo: "标题：Decoding China's industrial policies\n作者：Fang et al.\n年份：2025\n来源：Working paper",
+    plainSummary: "这篇论文关注中国工业政策如何被识别、分类和理解。",
+    background: "待补充。",
+    question: "这篇论文主要解决中国工业政策如何度量和解码的问题。",
+    framework: "待补充。",
+    modules: "待补充。",
+    concepts: "待补充。",
+    experiments: "待补充。",
+    innovations: "待补充。",
+    strengths: "待补充。",
+    weaknesses: "待补充。",
+    beginnerGuide: "待补充。",
+    finalSummary: "待补充。",
     data: "待补充。",
     method: "待补充。",
     limits: "待补充。",
@@ -50,6 +77,8 @@ const els = {
   detailView: document.querySelector("#detailView"),
   paperForm: document.querySelector("#paperForm"),
   formTitle: document.querySelector("#formTitle"),
+  reportNav: document.querySelector("#reportNav"),
+  reportSections: document.querySelector("#reportSections"),
   newPaperBtn: document.querySelector("#newPaperBtn"),
   folderInput: document.querySelector("#folderInput"),
   pdfInput: document.querySelector("#pdfInput"),
@@ -100,9 +129,7 @@ function mergePapers(localItems, remoteItems) {
     const item = upgradePaper(paper);
     const key = paperKey(item);
     const existing = merged.get(key);
-    if (!existing || isNewer(item, existing)) {
-      merged.set(key, item);
-    }
+    if (!existing || isNewer(item, existing)) merged.set(key, item);
   });
   return [...merged.values()].sort((a, b) => normalizeText(b.updatedAt).localeCompare(normalizeText(a.updatedAt)));
 }
@@ -118,7 +145,7 @@ function isNewer(candidate, existing) {
 }
 
 function upgradePaper(paper) {
-  return {
+  const upgraded = {
     id: paper.id || crypto.randomUUID(),
     title: paper.title || "",
     authors: paper.authors || "",
@@ -131,8 +158,6 @@ function upgradePaper(paper) {
     fileName: paper.fileName || "",
     filePath: paper.filePath || paper.link || "",
     link: paper.link || "",
-    question: paper.question || "",
-    findings: paper.findings || "",
     data: paper.data || "",
     method: paper.method || "",
     limits: paper.limits || "",
@@ -141,6 +166,15 @@ function upgradePaper(paper) {
     notes: paper.notes || "",
     updatedAt: paper.updatedAt || "2026-06-23T00:00:00.000Z"
   };
+
+  reportSections.forEach(({ key }) => {
+    upgraded[key] = paper[key] || "";
+  });
+
+  upgraded.plainSummary ||= paper.findings || "";
+  upgraded.question ||= paper.question || "";
+  upgraded.weaknesses ||= paper.limits || "";
+  return upgraded;
 }
 
 function savePapers() {
@@ -243,7 +277,6 @@ function renderList() {
   }
 
   visible.forEach((paper) => {
-    const categories = getCategories(paper);
     const item = document.createElement("button");
     item.type = "button";
     item.className = `paper-item ${paper.id === selectedId ? "active" : ""}`;
@@ -252,7 +285,7 @@ function renderList() {
       <small>${escapeHtml([paper.authors, paper.year].filter(Boolean).join(" · ") || paper.fileName || "暂无作者年份")}</small>
       <small class="venue-line">${escapeHtml(getVenue(paper))}</small>
       <span class="status-pill ${paper.status}">${statusLabels[paper.status] ?? "未分类"}</span>
-      <span class="mini-categories">${escapeHtml(categories.slice(0, 3).join(" · ") || "未分类")}</span>
+      <span class="mini-categories">${escapeHtml(getCategories(paper).slice(0, 3).join(" · ") || "未分类")}</span>
     `;
     item.addEventListener("click", () => {
       selectedId = paper.id;
@@ -274,18 +307,77 @@ function renderDetail() {
   setText("#detailMeta", [getVenue(paper), paper.year, statusLabels[paper.status]].filter(Boolean).join(" · "));
   setText("#detailTitle", paper.title || "未命名论文");
   setText("#detailAuthors", paper.authors || "暂无作者");
+  setText("#detailPlainSummary", paper.plainSummary || paper.findings);
   setText("#detailQuestion", paper.question);
-  setText("#detailFindings", paper.findings);
-  setText("#detailRelevance", paper.relevance);
-  setText("#detailData", paper.data);
-  setText("#detailMethod", paper.method);
-  setText("#detailLimits", paper.limits);
-  setText("#detailCitation", paper.citation);
-  setText("#detailNotes", paper.notes);
-  setText("#detailFile", [paper.filePath || paper.fileName, paper.link].filter(Boolean).join("\n"));
-
+  setText("#detailDataMethod", [paper.data, paper.method].filter(Boolean).join("\n\n"));
   renderPills("#detailCategories", getCategories(paper), "category-pill", "未分类");
   renderPills("#detailTags", getTags(paper), "tag", "");
+  renderReport(paper);
+}
+
+function renderReport(paper) {
+  const groups = [...new Set(reportSections.map((section) => section.group))];
+  els.reportNav.innerHTML = "";
+  els.reportSections.innerHTML = "";
+
+  groups.forEach((group, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `report-nav-btn ${index === 0 ? "active" : ""}`;
+    button.textContent = group;
+    button.addEventListener("click", () => activateReportGroup(group));
+    els.reportNav.append(button);
+  });
+
+  reportSections.forEach((section) => {
+    const card = document.createElement("section");
+    card.className = `report-card ${section.group === groups[0] ? "active" : ""}`;
+    card.dataset.group = section.group;
+    card.innerHTML = `
+      <div class="report-card-head">
+        <span>${escapeHtml(section.group)}</span>
+        <h3>${escapeHtml(section.title)}</h3>
+      </div>
+      <div class="report-text">${formatReportText(paper[section.key])}</div>
+    `;
+    els.reportSections.append(card);
+  });
+
+  const metaCard = document.createElement("section");
+  metaCard.className = "report-card active";
+  metaCard.dataset.group = groups[0];
+  metaCard.innerHTML = `
+    <div class="report-card-head">
+      <span>资料</span>
+      <h3>文件、引用和笔记</h3>
+    </div>
+    <div class="meta-grid">
+      <div><strong>引用信息</strong><p>${escapeHtml(paper.citation || "待补充")}</p></div>
+      <div><strong>文件位置</strong><p>${escapeHtml([paper.filePath || paper.fileName, paper.link].filter(Boolean).join("\n") || "待补充")}</p></div>
+      <div><strong>详细笔记</strong><p>${escapeHtml(paper.notes || "待补充")}</p></div>
+    </div>
+  `;
+  els.reportSections.append(metaCard);
+}
+
+function activateReportGroup(group) {
+  document.querySelectorAll(".report-nav-btn").forEach((button) => {
+    button.classList.toggle("active", button.textContent === group);
+  });
+  document.querySelectorAll(".report-card").forEach((card) => {
+    card.classList.toggle("active", card.dataset.group === group);
+  });
+}
+
+function formatReportText(value) {
+  const text = String(value || "待补充").trim();
+  const escaped = escapeHtml(text);
+  return escaped
+    .replace(/^#{1,3}\s*(.+)$/gm, "<h4>$1</h4>")
+    .replace(/^\s*[-*]\s+(.+)$/gm, "<li>$1</li>")
+    .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
+    .replace(/\n{2,}/g, "</p><p>")
+    .replace(/\n/g, "<br>");
 }
 
 function renderPills(selector, values, className, fallback) {
@@ -327,38 +419,48 @@ function escapeHtml(value) {
 }
 
 function titleFromFileName(fileName) {
-  return fileName
-    .replace(/\.pdf$/i, "")
-    .replace(/[_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return fileName.replace(/\.pdf$/i, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function createPaperFromFile(file) {
   const filePath = file.webkitRelativePath || file.name;
-  return {
+  return blankPaper({
     id: slugify(titleFromFileName(file.name) || file.name),
     title: titleFromFileName(file.name),
-    authors: "",
     year: inferYear(file.name),
+    fileName: file.name,
+    filePath,
+    updatedAt: new Date().toISOString()
+  });
+}
+
+function blankPaper(overrides = {}) {
+  const paper = {
+    id: crypto.randomUUID(),
+    title: "",
+    authors: "",
+    year: "",
     venue: "Working paper",
     status: "to-read",
     rating: "",
     categories: "",
     tags: "",
-    fileName: file.name,
-    filePath,
+    fileName: "",
+    filePath: "",
     link: "",
-    question: "",
-    findings: "",
     data: "",
     method: "",
     limits: "",
     relevance: "",
     citation: "",
     notes: "",
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    ...overrides
   };
+  reportSections.forEach(({ key }) => {
+    paper[key] ||= "";
+  });
+  return paper;
 }
 
 function slugify(value) {
@@ -405,11 +507,7 @@ function startEdit(paper = null) {
   els.formTitle.textContent = paper ? "编辑论文" : "新增论文";
   els.paperForm.reset();
 
-  const values = paper ?? {
-    venue: "Working paper",
-    status: "to-read"
-  };
-
+  const values = paper ?? blankPaper();
   Array.from(els.paperForm.elements).forEach((field) => {
     if (!field.name) return;
     field.value = values[field.name] ?? "";
@@ -469,11 +567,11 @@ els.paperForm.addEventListener("submit", (event) => {
   const payload = formToPaper(els.paperForm);
 
   if (editingId === "new") {
-    const paper = { id: slugify(payload.title || payload.fileName), ...payload };
+    const paper = blankPaper({ id: slugify(payload.title || payload.fileName), ...payload });
     papers.unshift(paper);
     selectedId = paper.id;
   } else {
-    papers = papers.map((paper) => (paper.id === editingId ? { ...paper, ...payload } : paper));
+    papers = papers.map((paper) => (paper.id === editingId ? blankPaper({ ...paper, ...payload }) : paper));
     selectedId = editingId;
   }
 
@@ -512,15 +610,6 @@ els.importInput.addEventListener("change", async (event) => {
   } finally {
     event.target.value = "";
   }
-});
-
-document.querySelectorAll(".tab-btn").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach((tab) => tab.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.remove("active"));
-    button.classList.add("active");
-    document.querySelector(`[data-panel="${button.dataset.tab}"]`).classList.add("active");
-  });
 });
 
 init();
