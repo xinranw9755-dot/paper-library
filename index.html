@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>论文概要库</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>论文概要库</h1>
+          <p>把论文文件、阅读概要、分类主题和复盘笔记放在一起</p>
+        </div>
+        <div class="top-actions">
+          <button id="newPaperBtn" class="primary-btn" type="button" title="新增论文">+ 新增</button>
+          <label class="file-btn" title="扫描论文文件夹">
+            扫描文件夹
+            <input id="folderInput" type="file" accept="application/pdf" webkitdirectory multiple>
+          </label>
+          <label class="file-btn" title="选择 PDF">
+            选择 PDF
+            <input id="pdfInput" type="file" accept="application/pdf" multiple>
+          </label>
+          <button id="exportBtn" type="button" title="导出 JSON">导出</button>
+          <label class="file-btn" title="导入 JSON">
+            导入
+            <input id="importInput" type="file" accept="application/json">
+          </label>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="library-panel" aria-label="论文列表">
+          <div class="search-box">
+            <input id="searchInput" type="search" placeholder="搜索标题、作者、期刊、分类、标签">
+            <select id="statusFilter" aria-label="阅读状态筛选">
+              <option value="all">全部状态</option>
+              <option value="to-read">待读</option>
+              <option value="reading">在读</option>
+              <option value="read">已读</option>
+              <option value="revisit">待复盘</option>
+            </select>
+            <select id="categoryFilter" aria-label="分类筛选">
+              <option value="all">全部分类</option>
+            </select>
+          </div>
+
+          <div class="summary-strip">
+            <div><strong id="paperCount">0</strong><span>篇论文</span></div>
+            <div><strong id="categoryCount">0</strong><span>个分类</span></div>
+          </div>
+
+          <div id="categoryCloud" class="category-cloud" aria-label="分类统计"></div>
+          <div id="paperList" class="paper-list"></div>
+        </aside>
+
+        <section class="detail-panel" aria-live="polite">
+          <div id="emptyState" class="empty-state">
+            <h2>选择一篇论文开始查看</h2>
+            <p>新增 PDF 后点“扫描文件夹”，网站会自动创建待填写条目；分类可用逗号分隔，一篇文章可以属于多个主题。</p>
+          </div>
+
+          <article id="detailView" class="paper-detail hidden">
+            <div class="detail-head">
+              <div>
+                <p id="detailMeta" class="meta-line"></p>
+                <h2 id="detailTitle"></h2>
+                <p id="detailAuthors" class="author-line"></p>
+              </div>
+              <div class="detail-actions">
+                <button id="editBtn" type="button">编辑</button>
+                <button id="deleteBtn" class="danger-btn" type="button">删除</button>
+              </div>
+            </div>
+
+            <div id="detailCategories" class="category-row"></div>
+            <div id="detailTags" class="tag-row"></div>
+
+            <div class="tabs" role="tablist" aria-label="详情视图">
+              <button class="tab-btn active" data-tab="summary" type="button">概要</button>
+              <button class="tab-btn" data-tab="method" type="button">方法</button>
+              <button class="tab-btn" data-tab="notes" type="button">笔记</button>
+            </div>
+
+            <div class="tab-panel active" data-panel="summary">
+              <dl class="field-grid">
+                <div><dt>研究问题</dt><dd id="detailQuestion"></dd></div>
+                <div><dt>核心结论</dt><dd id="detailFindings"></dd></div>
+                <div><dt>与你研究的关系</dt><dd id="detailRelevance"></dd></div>
+              </dl>
+            </div>
+
+            <div class="tab-panel" data-panel="method">
+              <dl class="field-grid">
+                <div><dt>数据</dt><dd id="detailData"></dd></div>
+                <div><dt>方法/识别</dt><dd id="detailMethod"></dd></div>
+                <div><dt>局限</dt><dd id="detailLimits"></dd></div>
+              </dl>
+            </div>
+
+            <div class="tab-panel" data-panel="notes">
+              <dl class="field-grid">
+                <div><dt>引用信息</dt><dd id="detailCitation"></dd></div>
+                <div><dt>详细笔记</dt><dd id="detailNotes"></dd></div>
+                <div><dt>文件位置</dt><dd id="detailFile"></dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <form id="paperForm" class="paper-form hidden">
+            <div class="form-head">
+              <div>
+                <p class="meta-line">论文条目</p>
+                <h2 id="formTitle">新增论文</h2>
+              </div>
+              <div class="detail-actions">
+                <button id="cancelBtn" type="button">取消</button>
+                <button class="primary-btn" type="submit">保存</button>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label>标题<input name="title" required></label>
+              <label>作者<input name="authors" placeholder="多个作者用逗号分隔"></label>
+              <label>年份<input name="year" type="number" min="1800" max="2100"></label>
+              <label>期刊/会议/来源<input name="venue" placeholder="未发表可写 Working paper"></label>
+              <label>阅读状态
+                <select name="status">
+                  <option value="to-read">待读</option>
+                  <option value="reading">在读</option>
+                  <option value="read">已读</option>
+                  <option value="revisit">待复盘</option>
+                </select>
+              </label>
+              <label>评分
+                <select name="rating">
+                  <option value="">未评分</option>
+                  <option value="5">5 - 关键文献</option>
+                  <option value="4">4 - 很有用</option>
+                  <option value="3">3 - 可参考</option>
+                  <option value="2">2 - 一般</option>
+                  <option value="1">1 - 暂不重要</option>
+                </select>
+              </label>
+              <label class="wide">分类<input name="categories" placeholder="产业政策, innovation, 失业保险"></label>
+              <label class="wide">标签<input name="tags" placeholder="DID, patent, China"></label>
+              <label>文件名<input name="fileName" placeholder="paper.pdf"></label>
+              <label>文件夹路径<input name="filePath" placeholder="论文文件夹/paper.pdf"></label>
+              <label class="wide">网页链接/DOI<input name="link" placeholder="https://... 或 DOI"></label>
+              <label class="wide">研究问题<textarea name="question"></textarea></label>
+              <label class="wide">核心结论<textarea name="findings"></textarea></label>
+              <label>数据<textarea name="data"></textarea></label>
+              <label>方法/识别<textarea name="method"></textarea></label>
+              <label>局限<textarea name="limits"></textarea></label>
+              <label>与你研究的关系<textarea name="relevance"></textarea></label>
+              <label class="wide">引用信息<textarea name="citation"></textarea></label>
+              <label class="wide">详细笔记<textarea name="notes"></textarea></label>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
