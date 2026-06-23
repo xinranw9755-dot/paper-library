@@ -14,6 +14,7 @@
   --green-soft: #eef6ed;
   --amber-soft: #fff7e7;
   --rose-soft: #fbedf0;
+  --violet-soft: #f3f0fb;
   --shadow: 0 14px 36px rgba(31, 39, 36, 0.09);
 }
 
@@ -487,6 +488,14 @@ textarea:focus {
 .report-note.data {
   background: var(--green-soft);
   border-color: #d7e8d3;
+}
+
+.report-note.formula {
+  background: var(--violet-soft);
+  border-color: #ddd4f2;
+  color: #2f274d;
+  font-family: "Cascadia Mono", Consolas, "Microsoft YaHei", monospace;
+  overflow-wrap: anywhere;
 }
 
 .report-note.warning {

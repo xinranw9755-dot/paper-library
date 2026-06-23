@@ -435,6 +435,10 @@ function getReportLineClass(line) {
     return "report-note warning";
   }
 
+  if (/^(公式|模型|估计方程|结构方程|目标函数|约束条件|一阶条件|识别方程|变量定义|测度公式)[：:]/.test(value)) {
+    return "report-note formula";
+  }
+
   if (/^(数据构造|构造流程|原始材料|原始数据库|样本范围|数据来源|数据衡量|变量构造|清洗|去重|匹配|编码|分类器|LLM prompt|阈值|复现)[：:]/.test(value)) {
     return "report-note data";
   }
