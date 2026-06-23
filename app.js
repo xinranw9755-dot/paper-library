@@ -1,4 +1,5 @@
 const STORAGE_KEY = "paper-summary-library-v2";
+const REMOTE_DATA_URL = "papers.json";
 
 const statusLabels = {
   "to-read": "待读",
@@ -9,7 +10,7 @@ const statusLabels = {
 
 const starterPapers = [
   {
-    id: crypto.randomUUID(),
+    id: "fang-2025-decoding-chinas-industrial-policies",
     title: "Decoding China's industrial policies",
     authors: "Fang et al.",
     year: "2025",
@@ -28,12 +29,13 @@ const starterPapers = [
     limits: "待补充。",
     relevance: "可作为产业政策度量、政策文本识别或政策冲击构造的参考文献。",
     citation: "",
-    notes: "这是根据当前文件夹中的 PDF 预置的示例条目，可直接编辑或删除。"
+    notes: "这是根据当前文件夹中的 PDF 预置的示例条目，可直接编辑或删除。",
+    updatedAt: "2026-06-23T00:00:00.000Z"
   }
 ];
 
-let papers = loadPapers();
-let selectedId = papers[0]?.id ?? null;
+let papers = [];
+let selectedId = null;
 let editingId = null;
 
 const els = {
@@ -58,27 +60,86 @@ const els = {
   cancelBtn: document.querySelector("#cancelBtn")
 };
 
-function loadPapers() {
+async function init() {
+  const localPapers = loadLocalPapers();
+  const remotePapers = await loadRemotePapers();
+  papers = mergePapers(localPapers, remotePapers.length ? remotePapers : starterPapers);
+  selectedId = papers[0]?.id ?? null;
+  savePapers();
+  render();
+}
+
+function loadLocalPapers() {
   const storedV2 = localStorage.getItem(STORAGE_KEY);
   const storedV1 = localStorage.getItem("paper-summary-library-v1");
   const stored = storedV2 || storedV1;
-  if (!stored) return starterPapers;
+  if (!stored) return [];
 
   try {
     const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) return starterPapers;
-    return parsed.map(upgradePaper);
+    return Array.isArray(parsed) ? parsed.map(upgradePaper) : [];
   } catch {
-    return starterPapers;
+    return [];
   }
+}
+
+async function loadRemotePapers() {
+  try {
+    const response = await fetch(`${REMOTE_DATA_URL}?v=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return [];
+    const parsed = await response.json();
+    return Array.isArray(parsed) ? parsed.map(upgradePaper) : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergePapers(localItems, remoteItems) {
+  const merged = new Map();
+  [...remoteItems, ...localItems].forEach((paper) => {
+    const item = upgradePaper(paper);
+    const key = paperKey(item);
+    const existing = merged.get(key);
+    if (!existing || isNewer(item, existing)) {
+      merged.set(key, item);
+    }
+  });
+  return [...merged.values()].sort((a, b) => normalizeText(b.updatedAt).localeCompare(normalizeText(a.updatedAt)));
+}
+
+function paperKey(paper) {
+  return normalizeText(paper.id || paper.filePath || paper.fileName || paper.title || crypto.randomUUID());
+}
+
+function isNewer(candidate, existing) {
+  const candidateTime = Date.parse(candidate.updatedAt || "") || 0;
+  const existingTime = Date.parse(existing.updatedAt || "") || 0;
+  return candidateTime >= existingTime;
 }
 
 function upgradePaper(paper) {
   return {
+    id: paper.id || crypto.randomUUID(),
+    title: paper.title || "",
+    authors: paper.authors || "",
+    year: paper.year || "",
+    venue: paper.venue || "Working paper",
+    status: paper.status || "to-read",
+    rating: paper.rating || "",
     categories: paper.categories || paper.category || "",
+    tags: paper.tags || "",
     fileName: paper.fileName || "",
     filePath: paper.filePath || paper.link || "",
-    ...paper
+    link: paper.link || "",
+    question: paper.question || "",
+    findings: paper.findings || "",
+    data: paper.data || "",
+    method: paper.method || "",
+    limits: paper.limits || "",
+    relevance: paper.relevance || "",
+    citation: paper.citation || "",
+    notes: paper.notes || "",
+    updatedAt: paper.updatedAt || "2026-06-23T00:00:00.000Z"
   };
 }
 
@@ -276,7 +337,7 @@ function titleFromFileName(fileName) {
 function createPaperFromFile(file) {
   const filePath = file.webkitRelativePath || file.name;
   return {
-    id: crypto.randomUUID(),
+    id: slugify(titleFromFileName(file.name) || file.name),
     title: titleFromFileName(file.name),
     authors: "",
     year: inferYear(file.name),
@@ -295,8 +356,16 @@ function createPaperFromFile(file) {
     limits: "",
     relevance: "",
     citation: "",
-    notes: ""
+    notes: "",
+    updatedAt: new Date().toISOString()
   };
+}
+
+function slugify(value) {
+  return normalizeText(value)
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || crypto.randomUUID();
 }
 
 function inferYear(text) {
@@ -359,6 +428,7 @@ function formToPaper(form) {
   }
   paper.status ||= "to-read";
   paper.venue ||= "Working paper";
+  paper.updatedAt = new Date().toISOString();
   return paper;
 }
 
@@ -399,7 +469,7 @@ els.paperForm.addEventListener("submit", (event) => {
   const payload = formToPaper(els.paperForm);
 
   if (editingId === "new") {
-    const paper = { id: crypto.randomUUID(), ...payload };
+    const paper = { id: slugify(payload.title || payload.fileName), ...payload };
     papers.unshift(paper);
     selectedId = paper.id;
   } else {
@@ -433,7 +503,7 @@ els.importInput.addEventListener("change", async (event) => {
   try {
     const imported = JSON.parse(await file.text());
     if (!Array.isArray(imported)) throw new Error("JSON must be an array");
-    papers = imported.map((paper) => upgradePaper({ id: paper.id || crypto.randomUUID(), ...paper }));
+    papers = mergePapers(papers, imported.map((paper) => upgradePaper({ id: paper.id || crypto.randomUUID(), ...paper })));
     selectedId = papers[0]?.id ?? null;
     savePapers();
     render();
@@ -453,4 +523,4 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
   });
 });
 
-render();
+init();
