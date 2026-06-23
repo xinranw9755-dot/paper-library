@@ -356,10 +356,10 @@ textarea:focus {
 }
 
 .report-nav-btn {
-  width: 34px;
   min-height: 34px;
   border-radius: 999px;
-  padding: 0;
+  padding: 0 13px;
+  white-space: nowrap;
 }
 
 .report-nav-btn:hover {

@@ -9,19 +9,19 @@ const statusLabels = {
 };
 
 const reportSections = [
-  { key: "basicInfo", title: "1. 论文基本信息", group: "概览" },
-  { key: "plainSummary", title: "2. 一句话总结", group: "概览" },
-  { key: "background", title: "3. 研究背景", group: "背景" },
-  { key: "question", title: "4. 核心问题", group: "背景" },
-  { key: "framework", title: "5. 方法整体框架", group: "方法" },
-  { key: "modules", title: "6. 关键模块逐个讲解", group: "方法" },
-  { key: "concepts", title: "7. 重要概念解释", group: "方法" },
-  { key: "experiments", title: "8. 实验部分解读", group: "结果" },
-  { key: "innovations", title: "9. 论文创新点", group: "结果" },
-  { key: "strengths", title: "10. 论文优点", group: "评价" },
-  { key: "weaknesses", title: "11. 论文不足", group: "评价" },
-  { key: "beginnerGuide", title: "12. 初学者最应该理解的内容", group: "学习" },
-  { key: "finalSummary", title: "13. 最后总结", group: "学习" }
+  { key: "basicInfo", title: "1. 论文基本信息", nav: "信息", group: "概览" },
+  { key: "plainSummary", title: "2. 一句话总结", nav: "总结", group: "概览" },
+  { key: "background", title: "3. 研究背景", nav: "背景", group: "背景" },
+  { key: "question", title: "4. 核心问题", nav: "问题", group: "背景" },
+  { key: "framework", title: "5. 方法整体框架", nav: "框架", group: "方法" },
+  { key: "modules", title: "6. 关键模块逐个讲解", nav: "模块", group: "方法" },
+  { key: "concepts", title: "7. 重要概念解释", nav: "概念", group: "方法" },
+  { key: "experiments", title: "8. 实验部分解读", nav: "实证", group: "结果" },
+  { key: "innovations", title: "9. 论文创新点", nav: "创新", group: "结果" },
+  { key: "strengths", title: "10. 论文优点", nav: "优点", group: "评价" },
+  { key: "weaknesses", title: "11. 论文不足", nav: "不足", group: "评价" },
+  { key: "beginnerGuide", title: "12. 初学者最应该理解的内容", nav: "入门", group: "学习" },
+  { key: "finalSummary", title: "13. 最后总结", nav: "结论", group: "学习" }
 ];
 
 const starterPapers = [
@@ -316,11 +316,11 @@ function renderReport(paper) {
   els.reportNav.innerHTML = "";
   els.reportSections.innerHTML = "";
 
-  reportSections.forEach((section, index) => {
+  reportSections.forEach((section) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "report-nav-btn";
-    button.textContent = String(index + 1);
+    button.textContent = section.nav;
     button.title = section.title;
     button.addEventListener("click", () => {
       document.querySelector(`#report-${section.key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
