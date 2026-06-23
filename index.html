@@ -45,6 +45,10 @@
             <select id="categoryFilter" aria-label="分类筛选">
               <option value="all">全部分类</option>
             </select>
+            <select id="favoriteFilter" aria-label="收藏筛选">
+              <option value="all">全部论文</option>
+              <option value="favorites">我的收藏</option>
+            </select>
           </div>
 
           <div class="summary-strip">
@@ -70,6 +74,7 @@
                 <p id="detailAuthors" class="author-line"></p>
               </div>
               <div class="detail-actions">
+                <button id="favoriteBtn" class="favorite-action" type="button" aria-pressed="false">收藏</button>
                 <button id="editBtn" type="button">编辑</button>
                 <button id="deleteBtn" class="danger-btn" type="button">删除</button>
               </div>
@@ -117,6 +122,7 @@
                   <option value="1">1 - 暂不重要</option>
                 </select>
               </label>
+              <label class="checkbox-label"><input name="favorite" type="checkbox"> 收藏为重要论文</label>
               <label class="wide">分类<input name="categories" placeholder="产业政策, innovation, 失业保险"></label>
               <label class="wide">标签<input name="tags" placeholder="DID, patent, China"></label>
               <label>文件名<input name="fileName" placeholder="paper.pdf"></label>

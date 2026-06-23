@@ -65,6 +65,12 @@ button:hover,
   color: var(--rose);
 }
 
+.favorite-action.active {
+  background: #fff3dc;
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
 .hidden {
   display: none !important;
 }
@@ -259,9 +265,16 @@ textarea:focus {
   line-height: 1.4;
 }
 
+.paper-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .status-pill,
 .tag,
-.category-pill {
+.category-pill,
+.favorite-pill {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
@@ -270,6 +283,11 @@ textarea:focus {
   font-size: 12px;
   background: var(--accent-soft);
   color: var(--accent-strong);
+}
+
+.favorite-pill {
+  background: #fff3dc;
+  color: var(--gold);
 }
 
 .category-pill {
@@ -453,6 +471,16 @@ label {
 
 label.wide {
   grid-column: 1 / -1;
+}
+
+.checkbox-label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.checkbox-label input {
+  width: auto;
 }
 
 .empty-list {

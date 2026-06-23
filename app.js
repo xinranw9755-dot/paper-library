@@ -73,6 +73,7 @@ const els = {
   searchInput: document.querySelector("#searchInput"),
   statusFilter: document.querySelector("#statusFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
+  favoriteFilter: document.querySelector("#favoriteFilter"),
   emptyState: document.querySelector("#emptyState"),
   detailView: document.querySelector("#detailView"),
   paperForm: document.querySelector("#paperForm"),
@@ -85,6 +86,7 @@ const els = {
   exportBtn: document.querySelector("#exportBtn"),
   importInput: document.querySelector("#importInput"),
   editBtn: document.querySelector("#editBtn"),
+  favoriteBtn: document.querySelector("#favoriteBtn"),
   deleteBtn: document.querySelector("#deleteBtn"),
   cancelBtn: document.querySelector("#cancelBtn")
 };
@@ -152,6 +154,7 @@ function upgradePaper(paper) {
     year: paper.year || "",
     venue: paper.venue || "Working paper",
     status: paper.status || "to-read",
+    favorite: Boolean(paper.favorite),
     rating: paper.rating || "",
     categories: paper.categories || paper.category || "",
     tags: paper.tags || "",
@@ -218,12 +221,14 @@ function filteredPapers() {
   const query = normalizeText(els.searchInput.value);
   const status = els.statusFilter.value;
   const category = els.categoryFilter.value;
+  const favorite = els.favoriteFilter?.value || "all";
 
   return papers.filter((paper) => {
     const matchesStatus = status === "all" || paper.status === status;
     const matchesCategory = category === "all" || getCategories(paper).includes(category);
+    const matchesFavorite = favorite === "all" || paper.favorite;
     const haystack = normalizeText(Object.values(paper).join(" "));
-    return matchesStatus && matchesCategory && (!query || haystack.includes(query));
+    return matchesStatus && matchesCategory && matchesFavorite && (!query || haystack.includes(query));
   });
 }
 
@@ -284,7 +289,10 @@ function renderList() {
       <strong>${escapeHtml(paper.title || "未命名论文")}</strong>
       <small>${escapeHtml([paper.authors, paper.year].filter(Boolean).join(" · ") || paper.fileName || "暂无作者年份")}</small>
       <small class="venue-line">${escapeHtml(getVenue(paper))}</small>
-      <span class="status-pill ${paper.status}">${statusLabels[paper.status] ?? "未分类"}</span>
+      <div class="paper-badges">
+        <span class="status-pill ${paper.status}">${statusLabels[paper.status] ?? "未分类"}</span>
+        ${paper.favorite ? '<span class="favorite-pill">收藏</span>' : ""}
+      </div>
       <span class="mini-categories">${escapeHtml(getCategories(paper).slice(0, 3).join(" · ") || "未分类")}</span>
     `;
     item.addEventListener("click", () => {
@@ -307,6 +315,11 @@ function renderDetail() {
   setText("#detailMeta", [getVenue(paper), paper.year, statusLabels[paper.status]].filter(Boolean).join(" · "));
   setText("#detailTitle", paper.title || "未命名论文");
   setText("#detailAuthors", paper.authors || "暂无作者");
+  if (els.favoriteBtn) {
+    els.favoriteBtn.textContent = paper.favorite ? "取消收藏" : "收藏";
+    els.favoriteBtn.classList.toggle("active", Boolean(paper.favorite));
+    els.favoriteBtn.setAttribute("aria-pressed", String(Boolean(paper.favorite)));
+  }
   renderPills("#detailCategories", getCategories(paper), "category-pill", "未分类");
   renderPills("#detailTags", getTags(paper), "tag", "");
   renderReport(paper);
@@ -431,6 +444,7 @@ function blankPaper(overrides = {}) {
     year: "",
     venue: "Working paper",
     status: "to-read",
+    favorite: false,
     rating: "",
     categories: "",
     tags: "",
@@ -499,7 +513,11 @@ function startEdit(paper = null) {
   const values = paper ?? blankPaper();
   Array.from(els.paperForm.elements).forEach((field) => {
     if (!field.name) return;
-    field.value = values[field.name] ?? "";
+    if (field.type === "checkbox") {
+      field.checked = Boolean(values[field.name]);
+    } else {
+      field.value = values[field.name] ?? "";
+    }
   });
 
   els.emptyState.classList.add("hidden");
@@ -515,6 +533,7 @@ function formToPaper(form) {
   }
   paper.status ||= "to-read";
   paper.venue ||= "Working paper";
+  paper.favorite = data.get("favorite") === "on";
   paper.updatedAt = new Date().toISOString();
   return paper;
 }
@@ -532,6 +551,16 @@ els.pdfInput.addEventListener("change", (event) => {
 els.editBtn.addEventListener("click", () => {
   const paper = papers.find((item) => item.id === selectedId);
   if (paper) startEdit(paper);
+});
+
+els.favoriteBtn?.addEventListener("click", () => {
+  papers = papers.map((paper) =>
+    paper.id === selectedId
+      ? { ...paper, favorite: !paper.favorite, updatedAt: new Date().toISOString() }
+      : paper
+  );
+  savePapers();
+  render();
 });
 
 els.cancelBtn.addEventListener("click", () => {
@@ -572,6 +601,7 @@ els.paperForm.addEventListener("submit", (event) => {
 els.searchInput.addEventListener("input", renderList);
 els.statusFilter.addEventListener("change", renderList);
 els.categoryFilter.addEventListener("change", render);
+els.favoriteFilter?.addEventListener("change", render);
 
 els.exportBtn.addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(papers, null, 2)], { type: "application/json" });
