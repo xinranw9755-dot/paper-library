@@ -307,32 +307,31 @@ function renderDetail() {
   setText("#detailMeta", [getVenue(paper), paper.year, statusLabels[paper.status]].filter(Boolean).join(" · "));
   setText("#detailTitle", paper.title || "未命名论文");
   setText("#detailAuthors", paper.authors || "暂无作者");
-  setText("#detailPlainSummary", paper.plainSummary || paper.findings);
-  setText("#detailQuestion", paper.question);
-  setText("#detailDataMethod", [paper.data, paper.method].filter(Boolean).join("\n\n"));
   renderPills("#detailCategories", getCategories(paper), "category-pill", "未分类");
   renderPills("#detailTags", getTags(paper), "tag", "");
   renderReport(paper);
 }
 
 function renderReport(paper) {
-  const groups = [...new Set(reportSections.map((section) => section.group))];
   els.reportNav.innerHTML = "";
   els.reportSections.innerHTML = "";
 
-  groups.forEach((group, index) => {
+  reportSections.forEach((section, index) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `report-nav-btn ${index === 0 ? "active" : ""}`;
-    button.textContent = group;
-    button.addEventListener("click", () => activateReportGroup(group));
+    button.className = "report-nav-btn";
+    button.textContent = String(index + 1);
+    button.title = section.title;
+    button.addEventListener("click", () => {
+      document.querySelector(`#report-${section.key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     els.reportNav.append(button);
   });
 
   reportSections.forEach((section) => {
     const card = document.createElement("section");
-    card.className = `report-card ${section.group === groups[0] ? "active" : ""}`;
-    card.dataset.group = section.group;
+    card.className = "report-card";
+    card.id = `report-${section.key}`;
     card.innerHTML = `
       <div class="report-card-head">
         <span>${escapeHtml(section.group)}</span>
@@ -344,8 +343,7 @@ function renderReport(paper) {
   });
 
   const metaCard = document.createElement("section");
-  metaCard.className = "report-card active";
-  metaCard.dataset.group = groups[0];
+  metaCard.className = "report-card";
   metaCard.innerHTML = `
     <div class="report-card-head">
       <span>资料</span>
@@ -358,15 +356,6 @@ function renderReport(paper) {
     </div>
   `;
   els.reportSections.append(metaCard);
-}
-
-function activateReportGroup(group) {
-  document.querySelectorAll(".report-nav-btn").forEach((button) => {
-    button.classList.toggle("active", button.textContent === group);
-  });
-  document.querySelectorAll(".report-card").forEach((card) => {
-    card.classList.toggle("active", card.dataset.group === group);
-  });
 }
 
 function formatReportText(value) {
