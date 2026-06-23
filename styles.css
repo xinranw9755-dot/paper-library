@@ -9,6 +9,11 @@
   --accent-soft: #e3f0ef;
   --gold: #b17923;
   --rose: #9e3d4f;
+  --blue: #356b8c;
+  --blue-soft: #edf5f8;
+  --green-soft: #eef6ed;
+  --amber-soft: #fff7e7;
+  --rose-soft: #fbedf0;
   --shadow: 0 14px 36px rgba(31, 39, 36, 0.09);
 }
 
@@ -358,7 +363,7 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
-  padding: 17px;
+  padding: clamp(18px, 2.8vw, 28px);
   box-shadow: var(--shadow);
 }
 
@@ -411,22 +416,103 @@ textarea:focus {
 
 .report-text,
 .meta-grid p {
-  line-height: 1.78;
-  white-space: pre-wrap;
+  line-height: 1.82;
 }
 
 .report-text p {
-  margin: 0 0 12px;
+  margin: 0 0 13px;
+  color: #2d3436;
 }
 
 .report-text h4 {
-  margin: 18px 0 8px;
-  font-size: 16px;
+  margin: 24px 0 10px;
+  padding-left: 10px;
+  border-left: 4px solid var(--accent);
+  color: var(--accent-strong);
+  font-size: 17px;
+  line-height: 1.45;
 }
 
 .report-text ul {
-  margin: 8px 0 14px;
-  padding-left: 22px;
+  margin: 10px 0 16px;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.report-text li {
+  position: relative;
+  margin: 0;
+  padding: 8px 10px 8px 24px;
+  border-radius: 6px;
+  line-height: 1.75;
+}
+
+.report-text li::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 1.05em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.report-text strong {
+  color: #111719;
+  font-weight: 800;
+}
+
+.report-label {
+  display: inline;
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.report-note {
+  border-radius: 7px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+}
+
+.report-note.focus {
+  background: var(--blue-soft);
+  border-color: #cfe2ea;
+}
+
+.report-note.data {
+  background: var(--green-soft);
+  border-color: #d7e8d3;
+}
+
+.report-note.warning {
+  background: var(--rose-soft);
+  border-color: #efd1d8;
+}
+
+.report-note.soft {
+  background: var(--amber-soft);
+  border-color: #f0dfbb;
+}
+
+.report-flag {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 1px 8px;
+  background: var(--rose-soft);
+  color: var(--rose);
+  font-weight: 800;
+}
+
+.report-text code {
+  border-radius: 4px;
+  background: #f0f2ef;
+  color: #39413e;
+  padding: 1px 5px;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.92em;
 }
 
 .meta-grid {

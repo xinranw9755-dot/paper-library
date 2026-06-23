@@ -373,13 +373,81 @@ function renderReport(paper) {
 
 function formatReportText(value) {
   const text = String(value || "待补充").trim();
-  const escaped = escapeHtml(text);
-  return escaped
-    .replace(/^#{1,3}\s*(.+)$/gm, "<h4>$1</h4>")
-    .replace(/^\s*[-*]\s+(.+)$/gm, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
-    .replace(/\n{2,}/g, "</p><p>")
-    .replace(/\n/g, "<br>");
+  const lines = text.split(/\r?\n/);
+  const html = [];
+  let listOpen = false;
+
+  const closeList = () => {
+    if (!listOpen) return;
+    html.push("</ul>");
+    listOpen = false;
+  };
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim();
+
+    if (!line) {
+      closeList();
+      return;
+    }
+
+    const heading = line.match(/^#{1,4}\s+(.+)$/);
+    if (heading) {
+      closeList();
+      html.push(`<h4>${formatInlineText(heading[1])}</h4>`);
+      return;
+    }
+
+    const bullet = line.match(/^[-*]\s+(.+)$/);
+    const numbered = line.match(/^\d+[.、]\s+(.+)$/);
+    if (bullet || numbered) {
+      if (!listOpen) {
+        html.push("<ul>");
+        listOpen = true;
+      }
+      html.push(`<li class="${getReportLineClass((bullet || numbered)[1])}">${formatInlineText((bullet || numbered)[1])}</li>`);
+      return;
+    }
+
+    closeList();
+    html.push(`<p class="${getReportLineClass(line)}">${formatInlineText(line)}</p>`);
+  });
+
+  closeList();
+  return html.join("");
+}
+
+function formatInlineText(value) {
+  let text = escapeHtml(value);
+
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/`(.+?)`/g, "<code>$1</code>");
+  text = text.replace(/(^|[（(；;。\s])?(原文没有明确说明|这是推测)(?=$|[）)；;。，\s])/g, '$1<span class="report-flag">$2</span>');
+  text = text.replace(/^([^：:]{2,26}[：:])/, '<strong class="report-label">$1</strong>');
+
+  return text;
+}
+
+function getReportLineClass(line) {
+  const value = String(line).trim();
+
+  if (/原文没有明确说明|这是推测/.test(value) || /^(论文不足|不足|局限|限制|风险|注意|容易误解|不可复现|误差|误分类)[：:]/.test(value)) {
+    return "report-note warning";
+  }
+
+  if (/^(数据构造|构造流程|原始材料|原始数据库|样本范围|数据来源|数据衡量|变量构造|清洗|去重|匹配|编码|分类器|LLM prompt|阈值|复现)[：:]/.test(value)) {
+    return "report-note data";
+  }
+
+  if (/^(一句话总结|核心问题|核心变量|主要结论|结论|创新点|最应该|必须掌握|重点|关键|输入|输出|为什么重要)[：:]/.test(value)) {
+    return "report-note focus";
+  }
+
+  if (/^(Abstract 中文翻译|通俗解释|在本文中的作用)[：:]/.test(value)) {
+    return "report-note soft";
+  }
+
+  return "";
 }
 
 function renderPills(selector, values, className, fallback) {
