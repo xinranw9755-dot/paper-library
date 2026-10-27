@@ -361,6 +361,7 @@ textarea:focus {
 }
 
 .report-card {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -420,6 +421,7 @@ textarea:focus {
 .meta-grid p {
   font-size: 14.5px;
   line-height: 1.62;
+  overflow-wrap: anywhere;
 }
 
 .report-text p {
